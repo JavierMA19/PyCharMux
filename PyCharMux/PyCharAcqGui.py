@@ -5,7 +5,7 @@ Created on Wed Feb 19 10:26:32 2020
 
 @author: Javier
 """
-
+#
 from __future__ import print_function
 from PyQt5 import Qt
 from qtpy.QtWidgets import (QHeaderView, QCheckBox, QSpinBox, QLineEdit,
