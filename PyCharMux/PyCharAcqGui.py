@@ -47,9 +47,9 @@ class CharacLivePlot():
 
     def __init__(self, SinglePoint=True, Bode=True, PSD=True, FFT=False):
 
-        self.DebugFig, self.DebugAxs = plt.subplots()
-        self.DebugAxs.ticklabel_format(axis='y', style='sci',
-                                       scilimits=(-2, 2))
+        # self.DebugFig, self.DebugAxs = plt.subplots()
+        # self.DebugAxs.ticklabel_format(axis='y', style='sci',
+        #                                scilimits=(-2, 2))
         plt.show()
 
         if not SinglePoint:
@@ -473,7 +473,7 @@ def main():
     import pkg_resources
 
     # Add version option
-    __version__ = pkg_resources.require("PyCont")[0].version
+    __version__ = pkg_resources.require("PyqtTools")[0].version
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', action='version',
                         version='%(prog)s {version}'.format(

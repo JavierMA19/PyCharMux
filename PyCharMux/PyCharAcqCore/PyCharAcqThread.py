@@ -23,7 +23,7 @@ SampSettingConf = (
                                  {'title': 'Acquire AC',
                                   'name': 'AcqAC',
                                   'type': 'bool',
-                                  'value': True},
+                                  'value': False},
                                  {'title': 'Gain DC',
                                   'name': 'DCGain',
                                   'type': 'float',
