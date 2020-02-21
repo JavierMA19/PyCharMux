@@ -365,7 +365,7 @@ class MainWindow(Qt.QWidget):
     # Next Bias
     def on_NextBias(self):
         print('NextBias')
-        # self.PlotSweep.UpdateSweepDcPlots(self.threadStbDet.SaveDCAC.DevDCVals)
+        self.PlotSweep.UpdateSweepDcPlots(self.threadStbDet.SaveDCAC.DevDCVals)
         
         if self.VdInd < len(self.VdsSweepVals) - 1:
             self.VdInd += 1
@@ -385,7 +385,6 @@ class MainWindow(Qt.QWidget):
 
         if self.threadAcq:
             print('PLotDC')
-            self.PlotSweep.UpdateSweepDcPlots(self.threadStbDet.SaveDCAC.DevDCVals)
             self.threadStbDet.VgIndex = self.VgInd
             self.threadStbDet.VdIndex = self.VdInd
             self.ApplyBiasPoint()
@@ -461,7 +460,7 @@ class MainWindow(Qt.QWidget):
             self.threadSave.terminate()
             self.threadSave = None
         if self.threadPlotter:
-            self.threadPlotter.stop()
+            # self.threadPlotter.stop()
             self.threadPlotter = None
 
         self.btnAcq.setText("Start Gen")
