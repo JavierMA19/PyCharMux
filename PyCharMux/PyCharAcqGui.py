@@ -365,7 +365,7 @@ class MainWindow(Qt.QWidget):
     # Next Bias
     def on_NextBias(self):
         print('NextBias')
-        self.PlotSweep.UpdateSweepDcPlots(self.threadStbDet.SaveDCAC.DevDCVals)
+        # self.PlotSweep.UpdateSweepDcPlots(self.threadStbDet.SaveDCAC.DevDCVals)
         
         if self.VdInd < len(self.VdsSweepVals) - 1:
             self.VdInd += 1
@@ -377,7 +377,6 @@ class MainWindow(Qt.QWidget):
                 self.VgInd = 0
                 DCDict = self.threadStbDet.SaveDCAC.DevDCVals
                 ACDict = self.threadStbDet.SaveDCAC.DevACVals
-                print(self.DCSaveKwargs)
                 self.threadStbDet.SaveDCAC.SaveDicts(DCDict,
                                                      ACDict,
                                                      **self.DCSaveKwargs)
@@ -385,7 +384,8 @@ class MainWindow(Qt.QWidget):
                 self.StopMain()
 
         if self.threadAcq:
-
+            print('PLotDC')
+            self.PlotSweep.UpdateSweepDcPlots(self.threadStbDet.SaveDCAC.DevDCVals)
             self.threadStbDet.VgIndex = self.VgInd
             self.threadStbDet.VdIndex = self.VdInd
             self.ApplyBiasPoint()
