@@ -167,9 +167,9 @@ class MainWindow(Qt.QWidget):
         self.Parameters.sigTreeStateChanged.connect(self.on_pars_changed)
 
         # File Saving
-        self.FileParameters = FileMod.SaveFileParameters(QTparent=self,
-                                                         name='Record File')
-        self.Parameters.addChild(self.FileParameters)
+        # self.FileParameters = FileMod.SaveFileParameters(QTparent=self,
+        #                                                  name='Record File')
+        # self.Parameters.addChild(self.FileParameters)
 
         # Config Saving
         self.ConfigParameters = FileMod.SaveSateParameters(QTparent=self,
@@ -211,8 +211,8 @@ class MainWindow(Qt.QWidget):
             self.PlotParams.param('Fs').setValue(data)
             self.PSDParams.param('Fs').setValue(data)
 
-        if childName == 'SampSettingConf.Sampling Settings.Fs':
-            self.RawPlotParams.param('Fs').setValue(data)
+        # if childName == 'SampSettingConf.Sampling Settings.Fs':
+            # self.RawPlotParams.param('Fs').setValue(data)
 
         if childName == 'Plot options.RefreshTime':
             if self.threadPlotter is not None:
@@ -233,7 +233,7 @@ class MainWindow(Qt.QWidget):
     def on_NewConf(self):
         self.Parameters.sigTreeStateChanged.disconnect()
         self.PlotParams.SetChannels(self.SamplingPar.GetChannelsNames())
-        self.RawPlotParams.SetChannels(self.SamplingPar.GetRowNames())
+        # self.RawPlotParams.SetChannels(self.SamplingPar.GetRowNames())
         self.Parameters.sigTreeStateChanged.connect(self.on_pars_changed)
 
     def on_btnStart(self):
@@ -256,16 +256,6 @@ class MainWindow(Qt.QWidget):
             AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
             ChannelsNames = self.SamplingPar.GetChannelsNames()
 
-            # Cycles
-            # self.Cycles = self.SamplingPar.GetCycles()
-            # self.initCy = self.Cycles['InitCy']
-            # self.finalCy = self.Cycles['FinalCy']
-            # if self.initCy > self.finalCy:
-            #     print('Set correct Cycles')
-            #     self.finalCy = self.initCy + 1
-            #     self.SamplingPar.Cycles.param('FinalCy').setValue(self.finalCy)
-            # self.SamplingPar.Cycles.param('CurrentCy').setValue(self.initCy)
-
             self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
                                                           SampKw=GenKwargs,
                                                           AvgIndex=AvgIndex,
@@ -277,7 +267,6 @@ class MainWindow(Qt.QWidget):
                                             Bode=False,
                                             PSD=False)
 
-            # def InitSweepChar(self):
             # Apply First Bias Point
             if self.SwEnable:
                 self.threadStbDet = StbDet.StbDetThread(MaxSlope=self.SweepsKwargs['MaxSlope'],
@@ -300,19 +289,19 @@ class MainWindow(Qt.QWidget):
 
             PlotterKwargs = self.PlotParams.GetParams()
 
-            FileName = self.FileParameters.FilePath()
-            print('Filename', FileName)
-            if FileName == '':
-                print('No file')
-            else:
-                if os.path.isfile(FileName):
-                    print('Remove File')
-                    os.remove(FileName)
-                MaxSize = self.FileParameters.param('MaxSize').value()
-                self.threadSave = FileMod.DataSavingThread(FileName=FileName,
-                                                           nChannels=PlotterKwargs['nChannels'],
-                                                           MaxSize=MaxSize)
-                self.threadSave.start()
+            # FileName = self.FileParameters.FilePath()
+            # print('Filename', FileName)
+            # if FileName == '':
+            #     print('No file')
+            # else:
+            #     if os.path.isfile(FileName):
+            #         print('Remove File')
+            #         os.remove(FileName)
+            #     MaxSize = self.FileParameters.param('MaxSize').value()
+            #     self.threadSave = FileMod.DataSavingThread(FileName=FileName,
+            #                                                nChannels=PlotterKwargs['nChannels'],
+            #                                                MaxSize=MaxSize)
+            #     self.threadSave.start()
 
             if self.PlotParams.param('PlotEnable').value():
                 self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
@@ -335,9 +324,9 @@ class MainWindow(Qt.QWidget):
             self.threadAcq.DaqInterface.Stop()
             self.threadAcq = None
 
-            if self.threadSave is not None:
-                self.threadSave.terminate()
-                self.threadSave = None
+            # if self.threadSave is not None:
+            #     self.threadSave.terminate()
+            #     self.threadSave = None
             if self.PlotParams.param('PlotEnable').value():
                 self.threadPlotter.terminate()
                 self.threadPlotter = None
@@ -353,8 +342,8 @@ class MainWindow(Qt.QWidget):
 
         if self.threadStbDet:
             self.threadStbDet.AddData(self.threadAcq.OutData.transpose())
-        if self.threadSave is not None:
-            self.threadSave.AddData(self.threadAcq.OutData.transpose())
+        # if self.threadSave is not None:
+        #     self.threadSave.AddData(self.threadAcq.OutData.transpose())
         if self.PlotParams.param('PlotEnable').value():
             self.threadPlotter.AddData(self.threadAcq.OutData.transpose())
         # if self.RawPlotParams.param('PlotEnable').value():
@@ -456,10 +445,11 @@ class MainWindow(Qt.QWidget):
             # self.threadStbDet.NextVg.disconnect()  
             # self.threadStbDet.stop()
         
-        if self.threadSave is not None:
-            self.threadSave.terminate()
-            self.threadSave = None
+        # if self.threadSave is not None:
+        #     self.threadSave.terminate()
+        #     self.threadSave = None
         if self.threadPlotter:
+            self.threadPlotter.terminate()
             # self.threadPlotter.stop()
             self.threadPlotter = None
 
