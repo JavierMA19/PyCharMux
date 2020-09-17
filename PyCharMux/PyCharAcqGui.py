@@ -297,23 +297,6 @@ class MainWindow(Qt.QWidget):
             self.threadAcq.start()
             PlotterKwargs = self.PlotParams.GetParams()
 
-            FileName = self.FileParameters.FilePath()
-            print('Filename', FileName)
-            if FileName == '':
-                print('No file')
-            else:
-                if os.path.isfile(FileName):
-                    print('Remove File')
-                    os.remove(FileName)
-                MaxSize = self.FileParameters.param('MaxSize').value()
-                ch = (list(self.SamplingPar.GetChannelsNames()))
-                self.threadSave = FileMod.DataSavingThread(FileName=FileName,
-                                                           nChannels=PlotterKwargs['nChannels'],
-                                                           MaxSize=MaxSize,
-                                                           Fs=self.SamplingPar.SampSet.param('Fs').value(),
-                                                           ChnNames=np.array(ch, dtype='S10'),
-                                                           )
-                self.threadSave.start()
             self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
             self.threadPlotter.start()
 
