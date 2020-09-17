@@ -1,15 +1,17 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb 19 10:56:29 2020
+Created on Wed Mar  6 12:25:45 2019
 
-@author: Javier
+@author: aguimera
 """
 
 from PyQt5 import Qt
 import pyqtgraph.parametertree.parameterTypes as pTypes
 import numpy as np
-import PyCharAcqCore.PyCharAcqCore as CoreMod
-import PyCharAcqCore.HwConf.HwConfig as BoardConf
+import PyTMCore.TMacqCore as CoreMod
+import PyqtTools.FileModule as FileMod
+import PyTMCore.HwConf.HwConfig as BoardConf
 import copy
 
 
@@ -112,8 +114,8 @@ SampSettingConf = ({'title': 'Channels Config',
                                   'limits': (-0.1, 0.5)},
                                  {'tittle': 'Analog Outputs',
                                   'name': 'AnalogOutputs',
-                                  'type': 'group',
-                                  'children': (), }, ), }
+                                  'type': 'group', 
+                                  'children': (), } , ), }
                    )
 
 ChannelParam = {'name': 'Chx',
@@ -150,6 +152,7 @@ class SampSetParam(pTypes.GroupParameter):
         self.Config = self.ChsConfig.param('Board')
         self.RowChannels = self.ChsConfig.param('Channels')
         self.ColChannels = self.ChsConfig.param('DigColumns')
+        
 
         # Init Settings
         self.on_Acq_Changed()
@@ -244,7 +247,7 @@ class SampSetParam(pTypes.GroupParameter):
     def on_Ao_Changed(self):
         self.Ao = {}
         for p in self.AnalogOutputs.children():
-            self.Ao[p.name()] = p.value()
+                self.Ao[p.name()] = p.value()
         self.NewConf.emit()
 
     def GetRowNames(self):

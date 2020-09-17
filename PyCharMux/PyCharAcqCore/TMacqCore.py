@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Feb 19 10:57:58 2020
-
-@author: Javier
-"""
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -14,7 +7,7 @@ Created on Tue Mar  5 14:13:45 2019
 """
 import PyqtTools.DaqInterface as DaqInt
 import numpy as np
-import PyCharAcqCore.HwConf.HwConfig as BoardConf
+import PyTMCore.HwConf.HwConfig as BoardConf
 
 
 class ChannelsConfig():
