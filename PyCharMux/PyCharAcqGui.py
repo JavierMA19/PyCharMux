@@ -66,10 +66,9 @@ class MainWindow(Qt.QWidget):
         self.SamplingPar.Fs.sigValueChanged.connect(self.on_FsChanged)
         self.SamplingPar.FsxCh.sigValueChanged.connect(self.on_FsxChChanged)
 
-        self.PsdPlotParams.NewConf.connect(self.on_NewPSDConf)
         self.SwParams = Charact.SweepsConfig(QTparent=self, name='Sweeps Configuration')
         self.Parameters.addChild(self.SwParams)
-        self.SwParams.param('SweepsConfig').param('Start/Stop Sweep').sigActivated.connect(self.on_Sweep_start)
+        # self.SwParams.param('SweepsConfig').param('Start/Stop Sweep').sigActivated.connect(self.on_Sweep_start)
 
         self.PlotParams = TimePltPars(name='TimePlt',
                               title='Time Plot Options')
@@ -90,7 +89,7 @@ class MainWindow(Qt.QWidget):
 
         layout.addWidget(self.treepar)
 
-        self.setGeometry(650, 20, 400, 800)
+        self.setGeometry(750, 40, 500, 900)
         self.setWindowTitle('MainWindow')
 
         self.btnAcq.clicked.connect(self.on_btnStart)
@@ -131,12 +130,14 @@ class MainWindow(Qt.QWidget):
         if childName == 'SampSettingConf.Sampling Settings.Vgs':
             if self.threadAcq:
                 Vds = self.threadAcq.DaqInterface.Vds
-                self.threadAcq.DaqInterface.SetBias(Vgs=data, Vds=Vds)
+                self.threadAcq.DaqInterface.SetBias(Vgs=data, Vds=Vds,
+                                                    ChAo2=None, ChAo3=None)
 
         if childName == 'SampSettingConf.Sampling Settings.Vds':
             if self.threadAcq:
                 Vgs = self.threadAcq.DaqInterface.Vgs
-                self.threadAcq.DaqInterface.SetBias(Vgs=Vgs, Vds=data)
+                self.threadAcq.DaqInterface.SetBias(Vgs=Vgs, Vds=data,
+                                                    ChAo2=None, ChAo3=None)
 
     def on_NewPSDConf(self):
         if self.threadPSDPlotter is not None:
@@ -195,12 +196,32 @@ class MainWindow(Qt.QWidget):
             GenKwargs = self.SamplingPar.GetSampKwargs()
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
             AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
+
+            # Characterization part
+            self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
+            self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
+            
+            self.threadCharact = Charact.StbDetThread(nChannels=self.PlotParams.GetParams()['nChannels'],
+                                                      ChnName=self.SamplingPar.GetChannelsNames(),
+                                                      PlotterDemodKwargs=self.PsdPlotParams.GetParams(),
+                                                      **self.SweepsKwargs
+                                                      )
+            self.threadCharact.NextVg.connect(self.on_NextVg)
+            self.threadCharact.NextVd.connect(self.on_NextVd)
+            self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
+            
+            GenKwargs['Vgs'] = self.threadCharact.NextVgs
+            GenKwargs['Vds'] = self.threadCharact.NextVds
+
+            # Acquisition part
             self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
                                                           SampKw=GenKwargs,
                                                           AvgIndex=AvgIndex,
                                                           )
 
             self.threadAcq.NewMuxData.connect(self.on_NewSample)
+
+            self.threadCharact.start()
             self.threadAcq.start()
 
             PlotterKwargs = self.PlotParams.GetParams()
@@ -228,6 +249,10 @@ class MainWindow(Qt.QWidget):
             self.threadAcq.DaqInterface.Stop()
             self.threadAcq = None
 
+            if self.threadCharact is not None:
+                self.threadCharact.stop()
+                self.threadCharact.CharactEnd.disconnect()
+                self.threadCharact = None
             if self.threadSave is not None:
                 self.threadSave.terminate()
                 self.threadSave = None
@@ -265,81 +290,21 @@ class MainWindow(Qt.QWidget):
             self.threadPlotterRaw.AddData(self.threadAcq.aiData.transpose())
         print('sample time', Ts, np.mean(self.Tss))
 
-    def on_Sweep_start(self):
-        if self.threadAcq is None:
-            self.Paused = False
-            
-            GenKwargs = self.SamplingPar.GetSampKwargs()            
-            GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
-            self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
-            self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
-            
-            self.threadCharact = Charact.StbDetThread(nChannels=self.PlotParams.GetParams()['nChannels'],
-                                                      ChnName=self.SamplingPar.GetChannelsNames(),
-                                                      PlotterDemodKwargs = self.PsdPlotParams.GetParams()
-                                                      **self.SweepsKwargs
-                                                      )
-            self.threadCharact.NextVg.connect(self.on_NextVg)
-            self.threadCharact.NextVd.connect(self.on_NextVd)
-            self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
-            
-            GenKwargs['Vgs'] = self.threadCharact.NextVgs
-            GenKwargs['Vds'] = self.threadCharact.NextVds
-            
-            self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
-                                                          SampKw=GenKwargs)
-            self.threadAcq.NewTimeData.connect(self.on_NewSample)
-            # self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
-            #                                     Vds=self.threadCharact.NextVds,
-            #                                     )
-            
-            self.threadCharact.start()
-            self.threadAcq.start()
-            PlotterKwargs = self.PlotParams.GetParams()
-
-            self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
-            self.threadPlotter.start()
-
-            self.threadPSDPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
-                                                      nChannels=PlotterKwargs['nChannels'],
-                                                      **self.PSDParams.GetParams())
-            self.threadPSDPlotter.start()
-
-            self.btnAcq.setText("Stop Gen")
-            self.OldTime = time.time()
-            self.Tss = []
-        else:
-            self.threadAcq.DaqInterface.Stop()
-            self.threadAcq = None
-            
-            if self.threadCharact is not None:
-                # self.threadCharact.NextVg.disconnect()
-                # self.threadCharact.NextVd.disconnect()
-                self.threadCharact.stop()
-                self.threadCharact.CharactEnd.disconnect()
-                self.threadCharact = None
-
-            if self.threadSave is not None:
-                self.threadSave.terminate()
-                self.threadSave = None
-
-            self.threadPlotter.terminate()
-            self.threadPlotter = None
-
-            self.btnAcq.setText("Start Gen")
-            
+           
 # #############################Restart Timer Stabilization####################
     def on_NextVg(self):
         self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
                                             Vds=self.threadCharact.NextVds,
-                                            )
+                                            ChAo2=None,
+                                            ChAo3=None)
         print('NEXT VGS SWEEP')
 
 # #############################Nex Vd Value##############################
     def on_NextVd(self):        
         self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
                                             Vds=self.threadCharact.NextVds,
-                                            )
+                                            ChAo2=None,
+                                            ChAo3=None)
 
         
     def on_CharactEnd(self):
@@ -353,7 +318,7 @@ class MainWindow(Qt.QWidget):
         self.threadCharact.SaveDCAC.SaveDicts(Dcdict=CharactDCDict,
                                               Acdict=CharactACDict,
                                               **self.DcSaveKwargs)
-        self.threadAcq.NewTimeData.disconnect()
+        self.threadAcq.NewMuxData.disconnect()
         
         self.threadAcq.DaqInterface.Stop()
         self.threadAcq.terminate()
@@ -363,8 +328,9 @@ class MainWindow(Qt.QWidget):
             self.threadSave.terminate()
             self.threadSave = None
 
-        self.threadPlotter.terminate()
-        self.threadPlotter = None
+        if self.threadPlotter is not None:
+            self.threadPlotter.terminate()
+            self.threadPlotter = None
 
 
 def main():
