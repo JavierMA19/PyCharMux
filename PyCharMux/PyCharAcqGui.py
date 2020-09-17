@@ -263,6 +263,7 @@ class MainWindow(Qt.QWidget):
 
         if self.threadPlotterRaw is not None:
             self.threadPlotterRaw.AddData(self.threadAcq.aiData.transpose())
+        print('sample time', Ts, np.mean(self.Tss))
 
     def on_Sweep_start(self):
         if self.threadAcq is None:
@@ -275,7 +276,7 @@ class MainWindow(Qt.QWidget):
             
             self.threadCharact = Charact.StbDetThread(nChannels=self.PlotParams.GetParams()['nChannels'],
                                                       ChnName=self.SamplingPar.GetChannelsNames(),
-                                                      PlotterDemodKwargs=self.PSDParams.GetParams(),
+                                                      PlotterDemodKwargs = self.PsdPlotParams.GetParams()
                                                       **self.SweepsKwargs
                                                       )
             self.threadCharact.NextVg.connect(self.on_NextVg)
