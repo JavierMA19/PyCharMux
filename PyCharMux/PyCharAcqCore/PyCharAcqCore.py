@@ -192,9 +192,6 @@ class ChannelsConfig():
             if True in line:
                 SortDInds.append(np.where(line))
         self.SortDInds = SortDInds
-        print(DOut.astype(np.uint8))
-        print(len(DOut))
-        print(DOut[-1])
         self.DigitalOutputs.SetContSignal(Signal=DOut.astype(np.uint8))
 
     def _SortChannels(self, data, SortDict):
