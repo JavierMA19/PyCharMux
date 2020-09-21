@@ -251,7 +251,7 @@ class MainWindow(Qt.QWidget):
 
             if self.threadCharact is not None:
                 self.threadCharact.stop()
-                self.threadCharact.CharactEnd.disconnect()
+                # self.threadCharact.CharactEnd.disconnect()
                 self.threadCharact = None
             if self.threadSave is not None:
                 self.threadSave.terminate()
