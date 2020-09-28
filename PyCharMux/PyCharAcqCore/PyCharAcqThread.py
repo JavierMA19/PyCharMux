@@ -184,7 +184,7 @@ class SampSetParam(pTypes.GroupParameter):
         print('GetChannelsChildren')
         if self.HwSettings:
             self.RowChannels.clearChildren()
-            for i in self.HwSettings['aiChannels']:
+            for i in sorted(self.HwSettings['aiChannels']):
                 cc = copy.deepcopy(ChannelParam)
                 cc['name'] = i
                 print(i)
@@ -194,7 +194,7 @@ class SampSetParam(pTypes.GroupParameter):
         print('GetColsChildren')
         if self.HwSettings:
             self.ColChannels.clearChildren()
-            for i in self.HwSettings['ColOuts']:
+            for i in sorted(self.HwSettings['ColOuts']):
                 cc = copy.deepcopy(ChannelParam)
                 cc['name'] = i
                 self.ColChannels.addChild(cc)
@@ -203,7 +203,7 @@ class SampSetParam(pTypes.GroupParameter):
         print('GetAnalogOutputs')
         if self.HwSettings:
             self.AnalogOutputs.clearChildren()
-            for i, k in self.HwSettings['aoChannels'].items():
+            for i, k in sorted(self.HwSettings['aoChannels'].items()):
                 print(i, k)
                 if any([i == 'ChAo2', i == 'ChAo3']) and k is not None:
                     cc = copy.deepcopy(AnalogOutParam)
@@ -266,11 +266,14 @@ class SampSetParam(pTypes.GroupParameter):
     def GetChannelsNames(self):
         Ind = 0
         ChannelNames = {}
+        ChannelsDCNames = {}
+        ChannelsACNames = {}
 
         if self.ChsConfig.param('AcqDC').value():
             for Row in self.Rows:
                 for Col in self.Columns:
                     ChannelNames[Row + Col + 'DC'] = Ind
+                    ChannelsDCNames[Row + Col] = Ind                   
                     Ind += 1
 
         if self.ChsConfig.param('AcqAC').value():
@@ -279,7 +282,7 @@ class SampSetParam(pTypes.GroupParameter):
                     ChannelNames[Row + Col + 'AC'] = Ind
                     Ind += 1
 
-        return ChannelNames
+        return ChannelNames, ChannelsDCNames
 
     def GetSampKwargs(self):
         GenKwargs = {}
@@ -328,7 +331,20 @@ class DataAcquisitionThread(Qt.QThread):
     def CalcAverage(self, MuxData):
         return np.mean(MuxData[:, self.AvgIndex:, :], axis=1)
 
-    def NewData(self, aiData, MuxData):
-        self.OutData = self.CalcAverage(MuxData)
-        self.aiData = aiData
+    def NewData(self, aiDataDC, MuxDataDC, aiDataAC, MuxDataAC):
+        if MuxDataDC is not None and MuxDataAC is not None:
+            print('AC--DC')
+            MuxData = np.vstack((MuxDataDC, MuxDataAC))
+            self.OutDataDC = self.CalcAverage(MuxDataDC)
+            self.OutDataAC = self.CalcAverage(MuxDataAC)            
+            self.aiData = np.vstack((aiDataDC, aiDataAC))
+        elif MuxDataDC is not None:
+            print('DC')
+            self.OutDataDC = self.CalcAverage(MuxDataDC)
+            self.aiData = aiDataDC
+        elif MuxDataAC is not None:
+            print('AC')
+            self.OutDataAC = self.CalcAverage(MuxDataAC)
+            self.aiData = aiDataAC
+
         self.NewMuxData.emit()

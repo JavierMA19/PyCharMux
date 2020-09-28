@@ -146,7 +146,7 @@ class MainWindow(Qt.QWidget):
             self.threadPSDPlotter.InitBuffer(nFFT=nFFT, nAvg=nAvg)
 
     def on_NewConf(self):
-        self.PlotParams.SetChannels(self.SamplingPar.GetChannelsNames())
+        self.PlotParams.SetChannels(self.SamplingPar.GetChannelsNames()[1])
         self.RawPlotParams.SetChannels(self.SamplingPar.GetRowNames())
         self.PsdPlotParams.ChannelConf = self.PlotParams.ChannelConf
         nChannels = self.PlotParams.param('nChannels').value()
@@ -200,11 +200,12 @@ class MainWindow(Qt.QWidget):
             # Characterization part
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
-            
-            self.threadCharact = Charact.StbDetThread(nChannels=self.PlotParams.GetParams()['nChannels'],
-                                                      ChnName=self.SamplingPar.GetChannelsNames(),
+
+            self.threadCharact = Charact.StbDetThread(
+                                                      nChannels=self.PlotParams.GetParams()['nChannels'],
+                                                      ChnName=self.SamplingPar.GetChannelsNames()[1],
                                                       PlotterDemodKwargs=self.PsdPlotParams.GetParams(),
-                                                      **self.SweepsKwargs
+                                                       **self.SweepsKwargs
                                                       )
             self.threadCharact.NextVg.connect(self.on_NextVg)
             self.threadCharact.NextVd.connect(self.on_NextVd)
@@ -275,16 +276,19 @@ class MainWindow(Qt.QWidget):
         self.OldTime = time.time()
 
         if self.threadSave is not None:
-            self.threadSave.AddData(self.threadAcq.OutData.transpose())
+            self.threadSave.AddData(self.threadAcq.OutData.transpose()) # Change for aiData?? TODO
 
-        if self.threadCharact is not None:
-            self.threadCharact.AddData(self.threadAcq.OutData.transpose())
+        if self.threadCharact is not None: #Flag estable and ACenable
+            if self.threadCharact.Stable and self.threadCharact.ACenable:
+                self.threadCharact.AddData(self.threadAcq.OutDataAC.transpose())
+            else:
+                self.threadCharact.AddData(self.threadAcq.OutDataDC.transpose())
 
         if self.threadPlotter is not None:
-            self.threadPlotter.AddData(self.threadAcq.OutData.transpose())
+            self.threadPlotter.AddData(self.threadAcq.OutDataDC.transpose())
 
         if self.threadPSDPlotter is not None:
-            self.threadPSDPlotter.AddData(self.threadAcq.OutData.transpose())
+            self.threadPSDPlotter.AddData(self.threadAcq.OutDataAC.transpose())
 
         if self.threadPlotterRaw is not None:
             self.threadPlotterRaw.AddData(self.threadAcq.aiData.transpose())

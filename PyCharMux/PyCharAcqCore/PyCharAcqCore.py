@@ -219,6 +219,10 @@ class ChannelsConfig():
 
     def EveryNEventCallBack(self, Data):
         _DataEveryNEvent = self.DataEveryNEvent
+        aiDataDC = None
+        aiDataAC = None
+        MuxDataDC = None
+        MuxDataAC = None
 
         if _DataEveryNEvent is not None:
             if self.AcqDC:
@@ -232,14 +236,16 @@ class ChannelsConfig():
                 aiDataAC = aiDataAC / self.ACGain
                 MuxDataAC = MuxDataAC / self.ACGain
 
-            if self.AcqAC and self.AcqDC:
-                aiData = np.vstack((aiDataDC, aiDataAC))
-                MuxData = np.vstack((MuxDataDC, MuxDataAC))
-                _DataEveryNEvent(aiData, MuxData)
-            elif self.AcqAC:
-                _DataEveryNEvent(aiDataAC, MuxDataAC)
-            elif self.AcqDC:
-                _DataEveryNEvent(aiDataDC, MuxDataDC)
+            _DataEveryNEvent(aiDataDC, MuxDataDC, aiDataAC, MuxDataAC)
+
+            # if self.AcqAC and self.AcqDC:
+            #     aiData = np.vstack((aiDataDC, aiDataAC))
+            #     MuxData = np.vstack((MuxDataDC, MuxDataAC))
+            #     _DataEveryNEvent(aiData, MuxData)
+            # elif self.AcqAC:
+            #     _DataEveryNEvent(aiDataAC, MuxDataAC)
+            # elif self.AcqDC:
+            #     _DataEveryNEvent(aiDataDC, MuxDataDC)
 
     def DoneEventCallBack(self, Data):
         print('Done callback')
