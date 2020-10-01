@@ -68,20 +68,19 @@ class MainWindow(Qt.QWidget):
 
         self.SwParams = Charact.SweepsConfig(QTparent=self, name='Sweeps Configuration')
         self.Parameters.addChild(self.SwParams)
-        # self.SwParams.param('SweepsConfig').param('Start/Stop Sweep').sigActivated.connect(self.on_Sweep_start)
 
         self.PlotParams = TimePltPars(name='TimePlt',
                               title='Time Plot Options')
 
         self.PlotParams.NewConf.connect(self.on_NewPlotConf)
-        self.Parameters.addChild(self.PlotParams)
+        # self.Parameters.addChild(self.PlotParams)
 
         self.RawPlotParams = TimePltPars(name='RawPlot')
-        self.Parameters.addChild(self.RawPlotParams)
+        # self.Parameters.addChild(self.RawPlotParams)
 
         self.PsdPlotParams = PSDPltPars(name='PSDPlt',
                                         title='PSD Plot Options')
-        self.Parameters.addChild(self.PsdPlotParams)
+        # self.Parameters.addChild(self.PsdPlotParams)
 
         self.treepar = ParameterTree()
         self.treepar.setParameters(self.Parameters, showTop=False)
@@ -96,8 +95,8 @@ class MainWindow(Qt.QWidget):
         self.ResetGraph.clicked.connect(self.on_ResetGraph)
 
         self.FileParameters = FileMod.SaveFileParameters(QTparent=self,
-                                                         name='Record File')
-        self.Parameters.addChild(self.FileParameters)
+                                                          name='Record File')
+        # self.Parameters.addChild(self.FileParameters)
 
         self.ConfigParameters = FileMod.SaveSateParameters(QTparent=self,
                                                            name='Configuration File')
@@ -196,14 +195,15 @@ class MainWindow(Qt.QWidget):
             GenKwargs = self.SamplingPar.GetSampKwargs()
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
             AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
+            ChannelsNames = self.SamplingPar.GetChannelsNames()[1]
 
             # Characterization part
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
 
             self.threadCharact = Charact.StbDetThread(
-                                                      nChannels=self.PlotParams.GetParams()['nChannels'],
-                                                      ChnName=self.SamplingPar.GetChannelsNames()[1],
+                                                      nChannels=len(ChannelsNames),
+                                                      ChnName=ChannelsNames,
                                                       PlotterDemodKwargs=self.PsdPlotParams.GetParams(),
                                                        **self.SweepsKwargs
                                                       )
@@ -225,23 +225,23 @@ class MainWindow(Qt.QWidget):
             self.threadCharact.start()
             self.threadAcq.start()
 
-            PlotterKwargs = self.PlotParams.GetParams()
+            # PlotterKwargs = self.PlotParams.GetParams()
 
-            FileName = self.FileParameters.FilePath()
-            print('Filename', FileName)
-            if FileName == '':
-                print('No file')
-            else:
-                if os.path.isfile(FileName):
-                    print('Remove File')
-                    os.remove(FileName)
-                MaxSize = self.FileParameters.param('MaxSize').value()
-                self.threadSave = FileMod.DataSavingThread(FileName=FileName,
-                                                           nChannels=PlotterKwargs['nChannels'],
-                                                           MaxSize=MaxSize)
-                self.threadSave.start()
+            # FileName = self.FileParameters.FilePath()
+            # print('Filename', FileName)
+            # if FileName == '':
+            #     print('No file')
+            # else:
+            #     if os.path.isfile(FileName):
+            #         print('Remove File')
+            #         os.remove(FileName)
+            #     MaxSize = self.FileParameters.param('MaxSize').value()
+            #     self.threadSave = FileMod.DataSavingThread(FileName=FileName,
+            #                                                nChannels=PlotterKwargs['nChannels'],
+            #                                                MaxSize=MaxSize)
+            #     self.threadSave.start()
 
-            self.on_ResetGraph()
+            # self.on_ResetGraph()
 
             self.btnAcq.setText("Stop Gen")
             self.OldTime = time.time()
@@ -254,18 +254,18 @@ class MainWindow(Qt.QWidget):
                 self.threadCharact.stop()
                 # self.threadCharact.CharactEnd.disconnect()
                 self.threadCharact = None
-            if self.threadSave is not None:
-                self.threadSave.terminate()
-                self.threadSave = None
-            if self.PlotParams.param('PlotEnable').value():
-                self.threadPlotter.terminate()
-                self.threadPlotter = None
-            if self.threadPSDPlotter is not None:
-                self.threadPSDPlotter.stop()
-                self.threadPSDPlotter = None
-            if self.threadPlotterRaw is not None:
-                self.threadPlotterRaw.stop()
-                self.threadPlotterRaw = None
+            # if self.threadSave is not None:
+            #     self.threadSave.terminate()
+            #     self.threadSave = None
+            # if self.PlotParams.param('PlotEnable').value():
+            #     self.threadPlotter.terminate()
+            #     self.threadPlotter = None
+            # if self.threadPSDPlotter is not None:
+            #     self.threadPSDPlotter.stop()
+            #     self.threadPSDPlotter = None
+            # if self.threadPlotterRaw is not None:
+            #     self.threadPlotterRaw.stop()
+            #     self.threadPlotterRaw = None
 
             self.btnAcq.setText("Start Gen")
 
@@ -275,8 +275,8 @@ class MainWindow(Qt.QWidget):
         self.Tss.append(Ts)
         self.OldTime = time.time()
 
-        if self.threadSave is not None:
-            self.threadSave.AddData(self.threadAcq.OutData.transpose()) # Change for aiData?? TODO
+        # if self.threadSave is not None:
+        #     self.threadSave.AddData(self.threadAcq.OutData.transpose()) # Change for aiData?? TODO
 
         if self.threadCharact is not None: #Flag estable and ACenable
             if self.threadCharact.Stable and self.threadCharact.ACenable:
@@ -284,14 +284,14 @@ class MainWindow(Qt.QWidget):
             else:
                 self.threadCharact.AddData(self.threadAcq.OutDataDC.transpose())
 
-        if self.threadPlotter is not None:
-            self.threadPlotter.AddData(self.threadAcq.OutDataDC.transpose())
+        # if self.threadPlotter is not None:
+        #     self.threadPlotter.AddData(self.threadAcq.OutDataDC.transpose())
 
-        if self.threadPSDPlotter is not None:
-            self.threadPSDPlotter.AddData(self.threadAcq.OutDataAC.transpose())
+        # if self.threadPSDPlotter is not None:
+        #     self.threadPSDPlotter.AddData(self.threadAcq.OutDataAC.transpose())
 
-        if self.threadPlotterRaw is not None:
-            self.threadPlotterRaw.AddData(self.threadAcq.aiData.transpose())
+        # if self.threadPlotterRaw is not None:
+        #     self.threadPlotterRaw.AddData(self.threadAcq.aiData.transpose())
         print('sample time', Ts, np.mean(self.Tss))
 
            
