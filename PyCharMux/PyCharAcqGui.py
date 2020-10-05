@@ -145,6 +145,7 @@ class MainWindow(Qt.QWidget):
             self.threadPSDPlotter.InitBuffer(nFFT=nFFT, nAvg=nAvg)
 
     def on_NewConf(self):
+        # self.PlotParams.SetChannels(self.SamplingPar.GetChannelsNames())
         self.PlotParams.SetChannels(self.SamplingPar.GetChannelsNames()[1])
         self.RawPlotParams.SetChannels(self.SamplingPar.GetRowNames())
         self.PsdPlotParams.ChannelConf = self.PlotParams.ChannelConf
@@ -196,6 +197,7 @@ class MainWindow(Qt.QWidget):
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
             AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
             ChannelsNames = self.SamplingPar.GetChannelsNames()[1]
+            print(ChannelsNames, '-->ChannelsNames')
 
             # Characterization part
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
