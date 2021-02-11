@@ -173,28 +173,42 @@ class ChannelsConfig():
         self.Vds = Vds
 
     def SetDigitalOutputs(self, nSampsCo):
-        print('SetDigitalOutputs')
-        DOut = np.array([], dtype=np.bool)
+        hwLinesMap = {}
+        for ColName, hwLine in self.doColumns.items():
+            il = int(hwLine[0][4:])
+            hwLinesMap[il] = (ColName, hwLine)
+        
+        # Gen inverted control output, should be the next one of the digital line ('lineX', 'lineX+1')
+        if len(self.doColumns[ColName]) > 1:
+            GenInvert = True
+        else:
+            GenInvert = False
 
-        for nCol, iCol in zip(range(len(self.doColumns)), sorted(list(self.doColumns.keys()))):
-            Lout = np.zeros((1, nSampsCo*len(self.DigColumns)), dtype=np.bool)
-            for i, n in enumerate(self.DigColumns):
-                if n == iCol:
-                    Lout[0, nSampsCo * i: nSampsCo * (i + 1)] = True
-                if len(self.doColumns[iCol]) > 1:
-                    Cout = np.vstack((Lout, ~Lout))
-                else:
-                    Cout = Lout
+        # Gen sorted indexes for demuxing
+        SortIndDict = {}
+        for ic, coln in enumerate(sorted(self.DigColumns)):
+            SortIndDict[coln] = ic
+        
+        DOut = np.array([], dtype=np.bool)
+        SortDInds = np.zeros((len(self.DigColumns), nSampsCo), dtype=np.int64)
+        SwitchOrder = 0
+        for il, (nLine, (LineName, hwLine)) in enumerate(sorted(hwLinesMap.items())):
+            Lout = np.zeros((1, nSampsCo*len(self.DigColumns)), dtype=np.bool)    
+            if LineName in self.DigColumns:
+                # print(il, nLine, hwLine, LineName)
+                Lout[0, nSampsCo * SwitchOrder: nSampsCo * (SwitchOrder + 1)] = True
+                SortDInds[SortIndDict[LineName], : ] = np.arange(nSampsCo * SwitchOrder,
+                                                             nSampsCo * (SwitchOrder + 1) )
+                SwitchOrder += 1
+            
+            if GenInvert:
+                Cout = np.vstack((Lout, ~Lout))
+            else:
+                Cout = Lout        
             DOut = np.vstack((DOut, Cout)) if DOut.size else Cout
 
-        SortDInds = []
-        for line in DOut[0:-1:2, :]:
-            if True in line:
-                SortDInds.append(np.where(line))
-
-        print(DOut.astype(np.uint8))
-        print(len(DOut))
-        print(DOut[-1])
+        SortDIndsL = [inds for inds in SortDInds] 
+        Dout = DOut.astype(np.uint8)
 
         self.SortDInds = SortDInds
         self.DigitalOutputs.SetContSignal(Signal=DOut.astype(np.uint8))
