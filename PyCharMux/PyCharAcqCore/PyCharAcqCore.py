@@ -68,19 +68,13 @@ class ChannelsConfig():
         print(self.DigColumns)
         DOChannels = []
 
-        for digc in sorted(self.DigColumns):
-        # for digc in sorted(self.doColumns):
-            print(digc)
-            DOChannels.append(self.doColumns[digc][0])
-            if len(self.doColumns[digc]) > 1:
-                DOChannels.append(self.doColumns[digc][1])
+        # for digc in sorted(self.DigColumns):
+        for k, v in self.doColumns.items():
+            DOChannels.append(v[0])
+            if len(v) > 1:
+                DOChannels.append(v[1])
+                
         print(DOChannels)
-
-#        DOChannels = []
-#
-#        for digc in self.DigColumns:
-#            DOChannels.append(doColumns[digc][0])
-#            DOChannels.append(doColumns[digc][1])
 
         self.DigitalOutputs = DaqInt.WriteDigital(Channels=DOChannels)
 
@@ -177,7 +171,15 @@ class ChannelsConfig():
         for ColName, hwLine in self.doColumns.items():
             il = int(hwLine[0][4:])
             hwLinesMap[il] = (ColName, hwLine)
-        
+
+        # j = 0
+        # NewInd = {}
+        # for i, c in sorted(hwLinesMap.items()):
+        #     for n in self.DigColumns:
+        #         if n == c[0]:
+        #             NewInd[j] = c[0]
+        #             j += 1
+
         # Gen inverted control output, should be the next one of the digital line ('lineX', 'lineX+1')
         if len(self.doColumns[ColName]) > 1:
             GenInvert = True
